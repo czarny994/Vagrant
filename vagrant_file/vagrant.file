@@ -1,0 +1,34 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+
+MACHINES = 2   # Number of machine
+BOX = "debian/jessie64" # Image for machines
+
+Vagrant.configure("2") do |config|
+  (2..MACHINES).each do |i|
+    config.vm.define "machine#{i}" do |subconfig|  
+      subconfig.vm.box = BOX
+      subconfig.vm.box_download_insecure = false
+    
+      subconfig.vm.provider "virtualbox" do |vb|
+        vb.cpus = 1
+        vb.memory = 1024
+      end
+
+      subconfig.vm.hostname = "machine#{i}"
+      subconfig.vm.synced_folder ".", "/vagrant", disabled: true
+
+      base_port = 1100
+      enviroment_base_port = base_port * i
+      ssh   = enviroment_base_port + 22
+      http  = enviroment_base_port + 80
+      https = enviroment_base_port + 443
+    
+
+      subconfig.vm.network "Forwarded port", guest: 22,   host: "#{ssh}",   id: 'ssh',   auto_correct: true  
+      subconfig.vm.network "Forwarded port", guest: 80,   host: "#{http}",  id: 'http',  auto_correct: true
+      subconfig.vm.network "Forwarded port", guest: 443,  host: "#{https}", id: 'https', auto_correct: true
+    end
+  end
+end
